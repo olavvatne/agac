@@ -13,8 +13,6 @@ class AppUI(Frame):
         Frame.__init__(self, master, relief=SUNKEN, bd=2, highlightthickness=0)
         self.grid(sticky=N+S+E+W)
         
-        #self.columnconfigure(0, weight=1)
-        #self.rowconfigure(0, weight=1)
         self.menubar = Menu(self)
 
         menu = Menu(self.menubar, tearoff=0)
@@ -25,9 +23,25 @@ class AppUI(Frame):
 
         menu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Run", menu=menu)
-        menu.add_command(label="Run k=4", command=run_gac, accelerator="Ctrl+R")
-        master.bind('<Control-r>', run_gac)
+        shortcuts = [(3, "q"), (4, "w"), (5, "e"), (6, "r"), (7, "t"), (8, "y"), (9, "u"), (10, "i")]
+        for num, key in shortcuts:
+            menu.add_command(
+                label="Run k=" + str(num),
+                command=lambda n=num: callback(n),
+                accelerator="Ctrl+" + str(key).upper())
+            master.bind("<Control-" + key +">", lambda event, n=num: callback(n))
         
+        menu.add_command(label="Run (custom k)", command=lambda: custom(), accelerator="Ctrl+A")
+        master.bind("<Control-a>", lambda event: custom())
+        def callback(n):
+            run_gac(k=n)
+        
+        def custom():
+            d = CustomDialog(master)
+            master.wait_window(d.top)
+            value = int(d.result)
+            run_gac(k=value)
+
         try:
             self.master.config(menu=self.menubar)
         except AttributeError:
@@ -43,31 +57,31 @@ class AppUI(Frame):
         unsatisfied_text = Label(self, text="Unsatisfied: ")
         unsatisfied_text.grid(row=0, column=0, sticky=W, padx=2)
 
-        self.unsatisfied_counter = Label(self, text="")
+        self.unsatisfied_counter = Label(self, text="", fg="red")
         self.unsatisfied_counter.grid(row=0, column=1, sticky=W, padx=2)
 
         unassigned_text = Label(self, text="Unassigned: ")
         unassigned_text.grid(row=0, column=2, sticky=W ,padx=2)
 
-        self.unassigned_counter = Label(self, text="")
+        self.unassigned_counter = Label(self, text="", fg="red")
         self.unassigned_counter.grid(row=0, column=3, sticky=W, padx=2)
 
         nodenumber_text = Label(self, text="Node generated: ")
         nodenumber_text.grid(row=0, column=4, sticky=W, padx=2)
 
-        self.nodenumber_counter = Label(self, text="")
+        self.nodenumber_counter = Label(self, text="", fg="red")
         self.nodenumber_counter.grid(row=0, column=5, sticky=W, padx=2)
 
         nodepopped_text = Label(self, text="Nodes popped: ")
         nodepopped_text.grid(row=0, column=6, sticky=W, padx=2)
 
-        self.nodepopped_counter = Label(self, text="")
+        self.nodepopped_counter = Label(self, text="", fg="red")
         self.nodepopped_counter.grid(row=0, column=7, sticky=W, padx=2)
 
         pathlength_text = Label(self, text="Assumptions: ")
         pathlength_text.grid(row=0, column=8, sticky=W,padx=2)
 
-        self.pathlength_counter = Label(self, text="")
+        self.pathlength_counter = Label(self, text="", fg="red")
         self.pathlength_counter.grid(row=0, column=9, sticky=W, padx=2)
 
 
@@ -84,28 +98,48 @@ class AppUI(Frame):
         self.columnconfigure(9, weight=1)
         self.rowconfigure(1, weight=1)
 
-    def set_labels(self, unsatisfied="", unassigned="", nodenumber="", nodepopped="", pathlength=""):
+    def set_labels(self, unsatisfied="", unassigned="", nodenumber="", nodepopped="", assumptions=""):
         self.unsatisfied_counter.config(text=str(unsatisfied))
         self.unassigned_counter.config(text=str(unassigned))
         self.nodenumber_counter.config(text=str(nodenumber))
         self.nodepopped_counter.config(text=str(nodepopped))
-        self.pathlength_counter.config(text=str(pathlength))
+        self.pathlength_counter.config(text=str(assumptions))
+
+
+class CustomDialog(object):
+    def __init__(self, parent):
+
+        top = self.top = Toplevel(parent)
+
+        Label(top, text="K value").pack()
+
+        self.e = Entry(top)
+        self.e.pack(padx=5)
+        self.result = ""
+        b = Button(top, text="OK", command=self.ok)
+        b.pack(pady=5)
+
+    def ok(self):
+        self.result = self.e.get()
+        self.top.destroy()
+
 
 #Start the vertex coloring.
 #Convert graph into domain, variables and constraints
 #So the general arc consistency can do it's job
-def run_gac(*args):
-    cn = None
-    if app.graph:
-        cn = VertexColoring.convert_graph_to_cnet(app.graph, 4)
+def run_gac(*args, k=4):
+    if not app.graph:
+        raise Exception("Open problem instance before running")
+    cn = VertexColoring.convert_graph_to_cnet(app.graph, k)
     #Create initialNode
     constraint_instance = cn.create_instance()
     start_node = GacNode(constraint_instance, is_root=True)
     
     #Run algorithm in it's own thread
     #The algorithm send events that is put in a display queue.
-    #This means that the Ui and algorithm can work together
+    #This UI and algorithm can work on seperate threads
     def callback():
+        app.visualizer.draw_label("K = " + str(k))
         app.visualizer.start()
         astar = Search(app.visualizer)
         result_node = astar.search(start_node, SearchMode.BEST)

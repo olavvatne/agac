@@ -15,12 +15,20 @@ class GraphDisplay(Canvas):
         self.width = self.cWi
         self.height = self.cHi
         self.padding = int(self.width/64)
+        self.parent = parent
         super().__init__(parent, bg='white', width=self.width, height=self.height, highlightthickness=0)
 
         
     def set_model(self, model):
         self.model = model
         self.draw_graph()
+        self.parent.set_labels(
+            nodenumber=0,
+            nodepopped=0,
+            assumptions=0,
+            unsatisfied="",
+            unassigned=len(self.model.vertices)
+            )
 
     def get_model(self):
         return self.model
@@ -31,18 +39,27 @@ class GraphDisplay(Canvas):
     #full speed while the display is delaying the rendering, so it is easy to
     #watch it's progress
     def draw(self):
-        print("--------------")
-        print("--------------")
-        print("Print")
         if len(self.queue)>0:
-            timeSlice = self.queue.popleft()
-            current_solution = timeSlice[0]
-            generated = timeSlice[1]
-            isSolution = timeSlice[2]
-
+            timeslice = self.queue.popleft()
+            current_solution = timeslice[0]
+            generated = timeslice[1]
+            popped = timeslice[2]
+            assumptions = timeslice[3]
+            is_solution = timeslice[4]
+            unassigned = 0
             for vertex, color_id in current_solution:
+                if color_id == -1:
+                    unassigned += 1
                 item = self.find_withtag(vertex)
                 self.colorize_item(item, Color.get(color_id))
+
+            self.parent.set_labels(
+                nodenumber=generated,
+                nodepopped=popped,
+                assumptions=assumptions,
+                unsatisfied=0,
+                unassigned=unassigned
+                )
         if not self.stopped or len(self.queue) > 0:
             self.after(40, self.draw)
 
@@ -61,6 +78,9 @@ class GraphDisplay(Canvas):
             self.translate_y(0),
             fill="grey")
 
+    def draw_label(self, text):
+        self.delete("label")
+        self.create_text(self.padding*3, self.padding*2, text=text, tags="label")
 
     def draw_graph(self):
         for e in self.model.edges:
@@ -123,8 +143,8 @@ class GraphDisplay(Canvas):
         self.config(width=self.width, height=self.height)
         self.scale("all",0,0,wscale,hscale)
 
-    def event(self, node, generated, solution):
-        self.queue.append((node.gui_representation(), generated, solution))
+    def event(self, node, generated, popped, assumptions, solution):
+        self.queue.append((node.gui_representation(), generated, popped, assumptions, solution))
 
 
 class Color(object):

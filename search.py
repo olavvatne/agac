@@ -14,7 +14,8 @@ class Search(object):
         if not hasattr(listner, "event"):
             raise Exception("Listner does not have event method handler")
         self.listner = listner
-        self.nodesGenerated = 0
+        self.nodes_generated = 0
+        self.nodes_popped = 0
 
     #A* implementation - based on pseudocode from accompanying document, IDAA
     #The search method support, depth, breadth and best first search, which is specified by mode.
@@ -35,7 +36,7 @@ class Search(object):
         n0 = start_node
         n0.set_G( 0 )
         frontier.add( n0 )
-        self.nodesGenerated +=1
+        self.nodes_generated +=1
         unique[n0.generate_id()] = n0
         solution = None
 
@@ -47,7 +48,14 @@ class Search(object):
                 #All nodes has been expanded and none were found to be a solution
                 return None
             x = frontier.pop()
-            self.listner.event(x, self.nodesGenerated, x.is_solution())
+            self.nodes_popped += 1
+            self.listner.event(
+                x,
+                self.nodes_generated,
+                self.nodes_popped,
+                x.get_level(),
+                x.is_solution()
+                )
             time.sleep(0.001)
             closed.add(x)
             if x.is_solution():
@@ -65,9 +73,9 @@ class Search(object):
                     s = unique[s.generate_id()]
                 else:
                     unique[s.generate_id()] = s
-                    #Only successors that are unique is added to nodesGenerated. It is only those that
+                    #Only successors that are unique is added to nodes_generated. It is only those that
                     #are used further.
-                    self.nodesGenerated += 1
+                    self.nodes_generated += 1
 
                 x.add_child(s)
 

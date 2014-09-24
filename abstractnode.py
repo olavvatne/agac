@@ -66,6 +66,14 @@ class Node(object):
     def calc_F(self):
         return self.get_G() + self.calc_H()
 
+    def get_level(self):
+        node = self
+        level = 0
+        while node:
+            node = node.get_parent()
+            level += 1
+        return level
+
     def __lt__(self, other):
         return self.calc_F() < other.calc_F()
 

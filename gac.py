@@ -107,6 +107,7 @@ class ConstraintInstance(object):
         return False
 
     #GAC heuristic
+    #TODO: Should find variable with most constraints attached?
     def get_next_assumption(self):
         smallest = float("inf")
         small_variable = None
