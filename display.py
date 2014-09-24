@@ -10,11 +10,11 @@ class GraphDisplay(Canvas):
     cHi = 400
 
     def __init__(self, parent):
-        self.padding = 20
         self.queue = deque([])
         self.model = None
         self.width = self.cWi
         self.height = self.cHi
+        self.padding = int(self.width/64)
         super().__init__(parent, bg='white', width=self.width, height=self.height, highlightthickness=0)
 
         
@@ -69,12 +69,14 @@ class GraphDisplay(Canvas):
                 self.translate_x( e.ep.x ),
                 self.translate_y( e.ep.y ),
                 dash=(4, 4))    
+
+        vertex_radius = int(self.width/256)
         for key in sorted(self.model.vertices):
             n = self.model.vertices[key]
-            self.create_oval(self.translate_x(n.x)-3,
-                self.translate_y(n.y)-3,
-                self.translate_x(n.x)+6,
-                self.translate_y(n.y)+6,
+            self.create_oval(self.translate_x(n.x)-(vertex_radius),
+                self.translate_y(n.y)-(vertex_radius),
+                self.translate_x(n.x)+(vertex_radius*2),
+                self.translate_y(n.y)+(vertex_radius*2),
                 fill="grey",
                 tags=str(n.id))
 
@@ -117,6 +119,7 @@ class GraphDisplay(Canvas):
         hscale = float(event.height)/self.height
         self.width = event.width
         self.height = event.height
+        self.padding = int(self.width/64)
         self.config(width=self.width, height=self.height)
         self.scale("all",0,0,wscale,hscale)
 

@@ -11,9 +11,10 @@ class AppUI(Frame):
 
     def __init__(self, master=None):
         Frame.__init__(self, master, relief=SUNKEN, bd=2, highlightthickness=0)
-        self.grid(column=0, row=0)
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
+        self.grid(sticky=N+S+E+W)
+        
+        #self.columnconfigure(0, weight=1)
+        #self.rowconfigure(0, weight=1)
         self.menubar = Menu(self)
 
         menu = Menu(self.menubar, tearoff=0)
@@ -31,18 +32,64 @@ class AppUI(Frame):
             self.master.config(menu=self.menubar)
         except AttributeError:
             self.master.tk.call(master, "config", "-menu", self.menubar)
-       
-        #TODO: Put in a bar where labels can be placed. 
-        #self.pack(fill=BOTH, expand=YES)
+
         self.visualizer = GraphDisplay(self)
-        self.visualizer.grid(row=1, column=1)
-        self.visualizer.columnconfigure(1, weight=1)
-        self.visualizer.rowconfigure(1, weight=1)
+        self.visualizer.grid(row=1, column=0, columnspan=10, sticky=N+S+E+W)
         #For resizing purposes. Display can be dynamically resized
-        #self.visualizer.pack(fill=BOTH, expand=YES)
         self.visualizer.bind("<Configure>", self.visualizer.on_resize)
         self.visualizer.addtag_all("all")
         self.graph = None
+
+        unsatisfied_text = Label(self, text="Unsatisfied: ")
+        unsatisfied_text.grid(row=0, column=0, sticky=W, padx=2)
+
+        self.unsatisfied_counter = Label(self, text="")
+        self.unsatisfied_counter.grid(row=0, column=1, sticky=W, padx=2)
+
+        unassigned_text = Label(self, text="Unassigned: ")
+        unassigned_text.grid(row=0, column=2, sticky=W ,padx=2)
+
+        self.unassigned_counter = Label(self, text="")
+        self.unassigned_counter.grid(row=0, column=3, sticky=W, padx=2)
+
+        nodenumber_text = Label(self, text="Node generated: ")
+        nodenumber_text.grid(row=0, column=4, sticky=W, padx=2)
+
+        self.nodenumber_counter = Label(self, text="")
+        self.nodenumber_counter.grid(row=0, column=5, sticky=W, padx=2)
+
+        nodepopped_text = Label(self, text="Nodes popped: ")
+        nodepopped_text.grid(row=0, column=6, sticky=W, padx=2)
+
+        self.nodepopped_counter = Label(self, text="")
+        self.nodepopped_counter.grid(row=0, column=7, sticky=W, padx=2)
+
+        pathlength_text = Label(self, text="Assumptions: ")
+        pathlength_text.grid(row=0, column=8, sticky=W,padx=2)
+
+        self.pathlength_counter = Label(self, text="")
+        self.pathlength_counter.grid(row=0, column=9, sticky=W, padx=2)
+
+
+        #How widgets should expand on resize
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.columnconfigure(2, weight=1)
+        self.columnconfigure(3, weight=1)
+        self.columnconfigure(4, weight=1)
+        self.columnconfigure(5, weight=1)
+        self.columnconfigure(6, weight=1)
+        self.columnconfigure(7, weight=1)
+        self.columnconfigure(8, weight=1)
+        self.columnconfigure(9, weight=1)
+        self.rowconfigure(1, weight=1)
+
+    def set_labels(self, unsatisfied="", unassigned="", nodenumber="", nodepopped="", pathlength=""):
+        self.unsatisfied_counter.config(text=str(unsatisfied))
+        self.unassigned_counter.config(text=str(unassigned))
+        self.nodenumber_counter.config(text=str(nodenumber))
+        self.nodepopped_counter.config(text=str(nodepopped))
+        self.pathlength_counter.config(text=str(pathlength))
 
 #Start the vertex coloring.
 #Convert graph into domain, variables and constraints
@@ -130,6 +177,8 @@ def onExit(*args):
 
 
 root = Tk()
+root.columnconfigure(0, weight=1)
+root.rowconfigure(0, weight=1)
 root.title("A*-gac map coloring")
 app = AppUI(root)
 root.bind('<Return>', run_gac)
