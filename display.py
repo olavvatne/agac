@@ -1,90 +1,147 @@
 from tkinter import *
 from tkinter import ttk
 from enum import Enum
-import math
+from math import fabs
 from collections import deque
 
+
 class GraphDisplay(Canvas):
-	cWi = 600
-	cHi = 400
-	pixelSize = 10
+    cWi = 600
+    cHi = 400
 
-	def __init__(self, parent):
-		self.padding = 20
-		self.queue = deque([])
-		super().__init__(parent, bg='white', width=self.cWi, height=self.cHi)
+    def __init__(self, parent):
+        self.padding = 20
+        self.queue = deque([])
+        self.model = None
+        self.width = self.cWi
+        self.height = self.cHi
+        super().__init__(parent, bg='white', width=self.width, height=self.height, highlightthickness=0)
 
-	def setModel(self, model):
-		self.model = model
+        
+    def set_model(self, model):
+        self.model = model
+        self.draw_graph()
 
-	def draw(self):
-		self.reset()
-		self.setDimension( self.model.width, self.model.height )
+    def get_model(self):
+        return self.model
 
-		if len(self.queue)>0:
-			timeSlice = self.queue.popleft()
-			currentPath = timeSlice[0]
-			#generated = timeSlice[1]
-			#isSolution = timeSlice[2]
-			#pathLength = len(currentPath) -1
-			
-			#self.create_text(400, 20, text=("Generated: " + str(generated)))
-			#self.create_text(400, 40, text=("Best path: " + str(pathLength)))
-			#if isSolution:
-			#	self.create_text(400, 60, text=("A solution!"))
-			#else:
-				#self.create_text(400, 60, text=("Not a solution!"))
+    #Draw will call itself and redraw (colorize nodes) as long
+    #as the display is in running mode or there are timeslices left
+    #in the queue. The queue of timeslices allow the algorithm to run at 
+    #full speed while the display is delaying the rendering, so it is easy to
+    #watch it's progress
+    def draw(self):
+        print("--------------")
+        print("--------------")
+        print("Print")
+        if len(self.queue)>0:
+            timeSlice = self.queue.popleft()
+            current_solution = timeSlice[0]
+            generated = timeSlice[1]
+            isSolution = timeSlice[2]
+
+            for vertex, color_id in current_solution:
+                item = self.find_withtag(vertex)
+                self.colorize_item(item, Color.get(color_id))
+        if not self.stopped or len(self.queue) > 0:
+            self.after(40, self.draw)
+
+    def colorize_item(self, item, color):
+        self.itemconfig(item, fill=color)
+
+    def draw_axis(self):
+        self.create_line(self.translate_x(0),
+            self.translate_y(self.min_y),
+            self.translate_x(0),
+            self.translate_y(self.max_y),
+            fill="grey")
+        self.create_line(self.translate_x(self.max_x),
+            self.translate_y(0),
+            self.translate_x(self.min_x),
+            self.translate_y(0),
+            fill="grey")
 
 
-		if not self.stopped or len(self.queue) > 0:
-			self.after(100, self.draw)
+    def draw_graph(self):
+        for e in self.model.edges:
+            self.create_line(self.translate_x( e.sp.x ),
+                self.translate_y( e.sp.y ),
+                self.translate_x( e.ep.x ),
+                self.translate_y( e.ep.y ),
+                dash=(4, 4))    
+        for key in sorted(self.model.vertices):
+            n = self.model.vertices[key]
+            self.create_oval(self.translate_x(n.x)-3,
+                self.translate_y(n.y)-3,
+                self.translate_x(n.x)+6,
+                self.translate_y(n.y)+6,
+                fill="grey",
+                tags=str(n.id))
+
+    def start(self):
+        self.stopped = False
+        self.draw()
+
+    def stop(self):
+        self.stopped = True
+
+    #The actual x position of the graph element on screen
+    def translate_x(self, x):
+        x_norm = fabs(self.min_x) + x
+        x_screen = (self.padding/2) + x_norm*(float((self.width-self.padding)/self.w))
+        return x_screen
+
+    #The actual y position of the graph element on screen
+    def translate_y(self, y):
+        y_norm = fabs(self.min_y) + y
+        y_screen = (self.padding/2) + y_norm*(float((self.height-self.padding)/self.h))
+        return y_screen
+
+    def reset(self):
+        self.delete(ALL)
+
+    def set_padding(self, padding):
+        self.padding = padding
+
+    def set_dimension(self, max_x, max_y, min_x, min_y):
+        self.w = fabs(min_x) + max_x
+        self.h = fabs(min_y) + max_y
+        self.max_x = max_x
+        self.max_y = max_y
+        self.min_y = min_y
+        self.min_x = min_x
+        self.draw_axis()
+
+    def on_resize(self,event):
+        wscale = float(event.width)/self.width
+        hscale = float(event.height)/self.height
+        self.width = event.width
+        self.height = event.height
+        self.config(width=self.width, height=self.height)
+        self.scale("all",0,0,wscale,hscale)
+
+    def event(self, node, generated, solution):
+        self.queue.append((node.gui_representation(), generated, solution))
 
 
-	def start(self):
-		self.stopped = False
-		self.draw()
-
-	def stop(self):
-		self.stopped = True
-
-	#The actual position of a board cell/pixel.
-	def gridPos(self, pos):
-		return self.padding+ (pos*self.pixelSize)
-
-	def reset(self):
-		self.delete(ALL)
-
-	#By setting the dimension the pixelSize is determined.
-	#Based on the width and height the board is scaled to fit inside the canvas.
-	def setDimension(self, width, height):
-		pass
-		#self.reset()
-		#self.width = width
-		#self.height = height
-		#if height >= width:
-	#		self.pixelSize = math.floor((self.cHi-2*self.padding) / height)
-	#	else:
-	#		self.pixelSize = math.floor( (self.cWi-2*self.padding) / width)
-	#	self.create_rectangle(self.padding, self.padding,
-	#						  self.padding + width*self.pixelSize,
-	#						  self.padding + height*self.pixelSize,
-	#						  fill="white")
-
-	def setPadding(self, padding):
-		self.padding = padding
-
-	#Event listener method. For the object to be accepted as a listener it has to have
-	#this method, or else an exception is raised.
-	def event(self, node, generated, solution):
-		self.queue.append((node.guiRepresentation(), generated, solution))
-	
-	def translateHeight(self, y):
-		return math.fabs(self.height -y)
-
-#Enum for fill colors for the different cells in the canvas.
-class FillColor(Enum):
-	PATH = "blue"
-	OBSTACLE = "red"
-	GOAL = "grey"
-	START = "grey"
-	NONE = "white"
+class Color(object):
+    options = {
+        -1: "grey",
+        0 : "red",
+        1 : "green",
+        4 : "blue",
+        9 : "yellow",
+        2 : "magenta",
+        3 : "cyan",
+        5 : "#D3FAC1",
+        6 : "#BB9435",
+        7 : "#FFFCC4",
+        8 : "#6B8079",
+        9 : "#FE605D",
+        10: "#3330F5",
+    }
+    def get(n):
+        if n < -1 or n > 10:
+            return "black"
+        else:
+            return Color.options[n]
