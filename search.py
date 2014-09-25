@@ -49,14 +49,7 @@ class Search(object):
                 return None
             x = frontier.pop()
             self.nodes_popped += 1
-            self.listner.event(
-                x,
-                self.nodes_generated,
-                self.nodes_popped,
-                x.get_level(),
-                x.is_solution()
-                )
-            time.sleep(0.001)
+            self.send_event(x)
             closed.add(x)
             if x.is_solution():
                 #Node is return in case node x is the solution
@@ -94,6 +87,18 @@ class Search(object):
                         #Propagating improvements can change the F value of some nodes, and
                         #heap list has to be sorted to keep the heap invariant.
                     frontier.reheap()
+
+    def send_event(self, x):
+        
+        self.listner.event(
+            x,
+            self.nodes_generated,
+            self.nodes_popped,
+            x.get_level(),
+            x.is_solution()
+            )
+        #Give thread a chance to yield to other threads
+        time.sleep(0.001)
 
     #Method that construct node graph, and sets the successors G value.
     def attachAndEval(self, child, parent):

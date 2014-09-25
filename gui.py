@@ -14,25 +14,24 @@ class AppUI(Frame):
         self.grid(sticky=N+S+E+W)
         
         self.menubar = Menu(self)
-
         menu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="File", menu=menu)
         menu.add_command(label="Open", command=open_problem, accelerator="Ctrl+O")
         master.bind('<Control-o>', open_problem)
         menu.add_command(label="Exit", command=onExit)
-
         menu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="Run", menu=menu)
+        
+        self.menubar.add_cascade(label="Run", menu=menu)  
         shortcuts = [(3, "q"), (4, "w"), (5, "e"), (6, "r"), (7, "t"), (8, "y"), (9, "u"), (10, "i")]
         for num, key in shortcuts:
             menu.add_command(
                 label="Run k=" + str(num),
                 command=lambda n=num: callback(n),
                 accelerator="Ctrl+" + str(key).upper())
-            master.bind("<Control-" + key +">", lambda event, n=num: callback(n))
-        
+            master.bind("<Control-" + key +">", lambda event, n=num: callback(n)) 
         menu.add_command(label="Run (custom k)", command=lambda: custom(), accelerator="Ctrl+A")
         master.bind("<Control-a>", lambda event: custom())
+        
         def callback(n):
             run_gac(k=n)
         
