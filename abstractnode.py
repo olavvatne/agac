@@ -49,7 +49,6 @@ class Node(object):
         self.children.append(node)
 
     def set_parent(self, node):
-        #TODO: ONE PARENT?
         self.parents = []
         self.parents.append(node)
 
@@ -72,12 +71,13 @@ class Node(object):
         while node:
             node = node.get_parent()
             level += 1
-        return level
+        #Null not counted in while loop and should be subtracted
+        return level-1
 
     def __lt__(self, other):
         return self.calc_F() < other.calc_F()
 
     #Representation for the GUI
     @abstractmethod
-    def gui_representation(self):
+    def gui_representation(self, generated, popped):
         pass

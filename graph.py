@@ -1,3 +1,8 @@
+#Simple object representation of a graph. 
+#The GraphModel object constitute of NodeModel's
+#and EdgeModel's. Object used as display model,
+#and in the provisional representation for the
+#a*-gac
 class GraphModel(object):
 
     def __init__(self):

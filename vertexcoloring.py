@@ -1,7 +1,11 @@
 
 from gac import ConstraintNetwork
 
-
+#Problem specific class. The a*-gac only accept
+#variables, constraints and domains so a specific problem in
+#a specific format has to be converted to the general form.
+#In this case VertexColoring takes a graph, and convert it to
+#constraints, domains and variables.
 class VertexColoring(object):
 
     #Prepares the constraint network from the graph.

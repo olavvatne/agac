@@ -8,7 +8,7 @@ class Search(object):
     
 
     #Init for the search object. A listner can be passed as a argument. The listner must
-    #have a event method. The A* algorithm will during its execution generate gui representation and
+    #have a event method. The A* algorithm will during its execution generate gui events and
     #call the lister.
     def __init__(self, listner):
         if not hasattr(listner, "event"):
@@ -89,14 +89,10 @@ class Search(object):
                     frontier.reheap()
 
     def send_event(self, x):
-        
-        self.listner.event(
-            x,
+        self.listner.event(x.gui_representation(
             self.nodes_generated,
-            self.nodes_popped,
-            x.get_level(),
-            x.is_solution()
-            )
+            self.nodes_popped
+            ))
         #Give thread a chance to yield to other threads
         time.sleep(0.001)
 
@@ -117,6 +113,7 @@ class Search(object):
                 child.set_G( parent.get_G() + parent.arc_cost(child) )
                 #F(C) auto calculated
                 self.propagatePathImprovements(child)
+
 
 #To support depth, breadth and best search using the same
 #algorithm the open list has to have different modes of inserting

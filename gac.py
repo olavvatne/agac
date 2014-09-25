@@ -8,11 +8,11 @@ from abstractnode import Node
 #A*-gac a specific problem has to be converted into
 #variables, constraints and domains. In this general form
 #the revise algorithm can be used to incrementally 
-#restrict the domain untill all variables has a domain
+#restrict the domain until all variables have a domain
 #of only 1 entry. This is a solution.
 #The actual algorithm recide in the ConstraintInstance, where
 #limiting domains are done. The constraintNetwork are mostly used
-#for converting and bookkeeping and retrieving constraints.
+#for converting, bookkeeping and retrieving constraints.
 class ConstraintNetwork(object):
 
     def __init__(self):
@@ -231,6 +231,17 @@ class ConstraintInstance(object):
 
         self.domain_filtering()
 
+    def count_unsatisfied_constraints(self):
+        unsatisfied = 0
+        for key,c in self.cnet.constraints.items():
+            satisfied = True
+            for c_v in c.variables:
+                if len(self.domain[c_v]) != 1:
+                    satisfied = False
+            if not satisfied:
+                unsatisfied += 1
+        return unsatisfied
+
     def __repr__(self):
         output =""
         for v in self.variables:
@@ -320,14 +331,22 @@ class GacNode(Node):
     #The display add tuples to a list containing name of variable
     #and a the chosen value. If the domain has not yet been reduced to 1
     #-1 is appended. Still ensure that partial solutions can be represented.
-    def gui_representation(self):
+    def gui_representation(self, generated, popped):
+        data = {}
         value_reduction = []
         for key, domain in self.ci.domain.items():
             if len(domain) == 1:
                 value_reduction.append((key, domain[0]))
             else:
                 value_reduction.append((key, -1))
-        return value_reduction
+        data["values"] = value_reduction
+        data["generated"] = generated
+        data["popped"] = popped
+        data["solution"] = self.is_solution
+        data["assumption"] = self.get_level()
+        data["unsatisfied"] = self.ci.count_unsatisfied_constraints()
+
+        return data
 
     #How the node should represent itself if printed.
     def __repr__(self):

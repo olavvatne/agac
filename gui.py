@@ -1,5 +1,5 @@
 from tkinter import *
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 from display import GraphDisplay
 from graph   import GraphModel, NodeModel, EdgeModel
 from gac import ConstraintNetwork, GacNode
@@ -128,6 +128,7 @@ class CustomDialog(object):
 #So the general arc consistency can do it's job
 def run_gac(*args, k=4):
     if not app.graph:
+        messagebox.showinfo("Error", "Open problem instance before running.")
         raise Exception("Open problem instance before running")
     cn = VertexColoring.convert_graph_to_cnet(app.graph, k)
     #Create initialNode
@@ -145,7 +146,8 @@ def run_gac(*args, k=4):
         app.visualizer.stop()
         print("FINISHED")
         if result_node:
-            print(result_node.is_solution())
+            print("SOLUTION")
+            print(result_node)
         else:
             print("NO SOLUTION")
 
@@ -155,7 +157,8 @@ def run_gac(*args, k=4):
 
 
 
-#Opens a file dialog where the input file can be graphically selected
+#Opens a file dialog where the input file can be graphically selected.
+#The file is converted into a graph which Display use as a model.
 def open_problem(*args):
     filename = filedialog.askopenfilename(title = "Choose text file containing graph data")
     try:
@@ -164,8 +167,8 @@ def open_problem(*args):
         app.graph = colorize_problem_data
         app.visualizer.set_model(colorize_problem_data)
 
-    except IOError as e:
-        print("File could not be openend" + format(e.errno, e.strerror))
+    except (Exception) as e:
+        messagebox.showinfo("Error", "File could not be read. \n" + str(e))
 
 #Configure the display when new data is presented,
 #and converts input data to objects which will be used to setup the a*-gac
