@@ -114,7 +114,7 @@ class ConstraintInstance(object):
     #The general revise method will potentially restrict
     #v's domain after testing the domain against the constraint
     #c. The constraint can involve n non_focal variables. This is ok,
-    #since v domain is tested against the cross product of the non_focal variable's
+    #since v domain is tested against the cross product of the non_focal variables'
     #domains. 
     def revise(self, v, c):
         revised = False
@@ -343,7 +343,7 @@ class GacNode(Node):
         data["values"] = value_reduction
         data["generated"] = generated
         data["popped"] = popped
-        data["solution"] = self.is_solution
+        data["solution"] = self.is_solution()
         data["assumption"] = self.get_level()
         data["unsatisfied"] = self.ci.count_unsatisfied_constraints()
 

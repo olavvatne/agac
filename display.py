@@ -48,7 +48,7 @@ class GraphDisplay(Canvas):
             generated = timeslice["generated"]
             popped = timeslice["popped"]
             assumptions = timeslice["assumption"]
-            is_solution = timeslice["popped"]
+            is_solution = timeslice["solution"]
             unassigned = 0
             unsatisfied = timeslice["unsatisfied"]
 
@@ -65,6 +65,10 @@ class GraphDisplay(Canvas):
                 unsatisfied=unsatisfied,
                 unassigned=unassigned
                 )
+            if is_solution:
+                self.draw_label("Solution", self.padding*2,self.padding*3, t="solution")
+            else:
+                self.draw_label("Not solution", self.padding*2,self.padding*3, t="solution")
         if not self.stopped or len(self.queue) > 0:
             self.after(40, self.draw)
 
@@ -85,9 +89,9 @@ class GraphDisplay(Canvas):
             self.translate_y(0),
             fill="#C0C0C0")
 
-    def draw_label(self, text):
-        self.delete("label")
-        self.create_text(self.padding*3, self.padding*2, text=text, tags="label")
+    def draw_label(self, text, x, y,t="label"):
+        self.delete(t)
+        self.create_text(x, y, text=text, tags=t)
 
     #Method for drawing a graph from a GraphModel. 
     #Draws edges and then vertices to get correct ordering and 

@@ -139,7 +139,8 @@ def run_gac(*args, k=4):
     #The algorithm send events that is put in a display queue.
     #This UI and algorithm can work on seperate threads
     def callback():
-        app.visualizer.draw_label("K = " + str(k))
+        padding = app.visualizer.padding
+        app.visualizer.draw_label("K = " + str(k), padding*2,padding*2)
         app.visualizer.start()
         astar = Search(app.visualizer)
         result_node = astar.search(start_node, SearchMode.BEST)
