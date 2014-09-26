@@ -19,6 +19,7 @@ class ConstraintNetwork(object):
         self.variables = []
         self.domain = {}
         self.constraints = {}
+        self.unique_constraints = []
 
     #Add a new variable to the network
     #All variables should also have a domain
@@ -49,6 +50,7 @@ class ConstraintNetwork(object):
         #The expressions associated with a variable can easily be retrieved
         for variable in variable_list:
             self.constraints[variable].append(constraint)
+        self.unique_constraints.append(constraint)
     
     #Check if variable is actually in network
     def check_variable(self, v):
@@ -228,12 +230,11 @@ class ConstraintInstance(object):
             for v in c.variables:
                 if v is not assumption:
                     self.add_constraints_to_queue(v)
-
         self.domain_filtering()
 
     def count_unsatisfied_constraints(self):
         unsatisfied = 0
-        for key,c in self.cnet.constraints.items():
+        for c in self.cnet.unique_constraints:
             satisfied = True
             for c_v in c.variables:
                 if len(self.domain[c_v]) != 1:

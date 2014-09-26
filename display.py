@@ -4,7 +4,9 @@ from enum import Enum
 from math import fabs
 from collections import deque
 
-
+#Subclass of the tkinters Canvas object. Contains methods
+#for setting a graph model and drawing a graph, and changing
+#the vertices' colors.
 class GraphDisplay(Canvas):
     cWi = 600
     cHi = 400
