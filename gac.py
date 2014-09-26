@@ -19,7 +19,7 @@ class ConstraintNetwork(object):
         self.variables = []
         self.domain = {}
         self.constraints = {}
-        self.unique_constraints = []
+        self.unique_constraints = [] #Only unique constrains put in list
 
     #Add a new variable to the network
     #All variables should also have a domain
@@ -50,6 +50,7 @@ class ConstraintNetwork(object):
         #The expressions associated with a variable can easily be retrieved
         for variable in variable_list:
             self.constraints[variable].append(constraint)
+
         self.unique_constraints.append(constraint)
     
     #Check if variable is actually in network
@@ -60,7 +61,8 @@ class ConstraintNetwork(object):
     #Checks if domain is set
     def check_domain(self, d):
         #Check if list. Just for convenience
-        pass
+        if type(d) is not list:
+            raise Exception("set_domain only accept lists with values")
 
     #Sets the domain d for a variable v.
     #Argument d should be a list containing values
@@ -99,7 +101,7 @@ class Constraint(object):
         self.variables = variables
 
 
-#The constraintInstance is a restricted instance of the constraintNetwork object
+#The constraintInstance is a restricted instance of the ConstraintNetwork object
 #It has pointers to the constraints and copies of the potentially restricted
 #domains.
 class ConstraintInstance(object):
@@ -109,10 +111,10 @@ class ConstraintInstance(object):
         self.domain = deepcopy(d)
         self.cnet = network
 
-    #The general revise method will potensially restrict
+    #The general revise method will potentially restrict
     #v's domain after testing the domain against the constraint
     #c. The constraint can involve n non_focal variables. This is ok,
-    #since v domain is tested against the cross product of the non_focal variables'
+    #since v domain is tested against the cross product of the non_focal variable's
     #domains. 
     def revise(self, v, c):
         revised = False
@@ -140,7 +142,7 @@ class ConstraintInstance(object):
                 revised = True
                 self.domain[v].remove(focal_value)
         #If values has been removed from v's domain true is returned.
-        #Important since v smaller domain might have an impact on other
+        #Important since the now smaller domain of v might have an impact on other
         #variables connected to v through constraints
         return revised
 
@@ -182,7 +184,6 @@ class ConstraintInstance(object):
     #related to the reduced variable has to be added to the queue for 
     #further testing. This process will propagate domain change until 
     #the instance becomes stable and no more domain reduction is possible.
-
     def domain_filtering(self):
         while self.queue:
             variable, constraint = self.queue.popleft()
@@ -220,7 +221,7 @@ class ConstraintInstance(object):
                 self.queue.append(revise_request)
 
             
-    #Given that an assumtion was made about a variable.
+    #Given that an assumption was made about a variable.
     # X's domain is set to a value, and the change of X's domain
     #has to be propagated to the other variables.
     #For all constraints the assumption variable is a part of,
@@ -274,8 +275,8 @@ class GacNode(Node):
             self.ci.initialize()
             self.ci.domain_filtering()
 
-    #Generate_sucessors consult the constraint instance for getting the next
-    #variable to use for an assumption. An assumption make a guess for a 
+    #Generate_sucessors consult the constraint instance about what getting the 
+    #next variable to use for an assumption. An assumption make a guess for a 
     #specific variable, and therefore reduce the domain to a single value.
     #Returns a list of successors where 1 variable has been assumed, generating
     #a successor for each of the values in the variables domain. Not added
@@ -293,7 +294,6 @@ class GacNode(Node):
                 #The rerun does inferences on the domains using constraints.
                 if not potential_instance.is_contradictory():
                     successors.append(GacNode(potential_instance))
-        #print("Created " + str(len(successors)) + " number of successors")
         return successors
 
     #search heuristic based on the total size of the instance variable domains
@@ -305,7 +305,7 @@ class GacNode(Node):
             domain_size += len(domain)
         return domain_size-1
 
-    #How the node id itself. The a star can use the returned value to check
+    #How the node id itself. The a-star can use the returned value to check
     #if node has been generated before or not, and avoids duplicates in the search
     #tree
     def generate_id(self):
